@@ -68,6 +68,7 @@ button{font-family:inherit;}
 .ticket-image{aspect-ratio:4/5;background:#fff;display:flex;align-items:center;justify-content:center;position:relative;}
 .ticket-image img{width:100%;height:100%;object-fit:contain;padding:6px;}
 .ticket-image .ph{width:26%;height:auto;opacity:0.16;}
+.size-badge{position:absolute;top:8px;right:8px;background:var(--wine-dark);color:#fff;font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.04em;padding:3px 8px;border-radius:999px;}
 .qty-badge{position:absolute;top:8px;left:8px;background:var(--ink);color:#fff;font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:11px;padding:3px 8px;border-radius:999px;}
 .ticket-body{padding:12px 14px 14px;display:flex;flex-direction:column;gap:8px;flex:1;}
 .ticket-brand{font-family:'IBM Plex Mono',monospace;font-size:10.5px;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-soft);margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
@@ -272,6 +273,14 @@ button{font-family:inherit;}
         <label>Quantité<input type="number" inputmode="numeric" id="fQty" min="1" value="1" /></label>
         <label>Prix unitaire (€)<input type="number" inputmode="decimal" id="fPrice" min="0" step="0.5" placeholder="35" /></label>
       </div>
+      <label>Format
+        <select id="fSize">
+          <option value="">Bouteille 75 cl</option>
+          <option value="Demi-bouteille 37,5 cl">Demi-bouteille 37,5 cl</option>
+          <option value="Magnum 1,5 L">Magnum 1,5 L</option>
+          <option value="Jéroboam 3 L">Jéroboam 3 L</option>
+        </select>
+      </label>
       <div class="row2">
         <label>Apogée — dès<input type="number" inputmode="numeric" id="fFrom" placeholder="2024" /></label>
         <label>Apogée — jusqu'à<input type="number" inputmode="numeric" id="fTo" placeholder="2030" /></label>
@@ -426,7 +435,7 @@ function render(){
     const left = b.myRating ? `<span class="mini-stars">${miniStars(b.myRating)}</span>` : (b.communityRating ? `<span>${b.communityRating}/10${b.communityVotes?` · ${fmtVotes(b.communityVotes)}`:''}</span>` : `<span>${esc(COLORS[b.color]||'')}</span>`);
     return `
       <article class="ticket" data-id="${b.id}">
-        <div class="ticket-image">${imgHtml(b)}${!isH && Number(b.qty)>1 ? `<span class="qty-badge">×${b.qty}</span>`:''}</div>
+        <div class="ticket-image">${imgHtml(b)}${!isH && Number(b.qty)>1 ? `<span class="qty-badge">×${b.qty}</span>`:''}${b.size ? `<span class="size-badge">${esc(b.size.split(' ')[0])}</span>`:''}</div>
         <div class="ticket-body">
           <p class="ticket-brand">${esc(b.producer||'—')}</p>
           <p class="ticket-model">${esc(b.name)}</p>
@@ -469,7 +478,7 @@ function renderDetail(){
       <p class="detail-brand">${esc(b.producer||'—')}</p>
       <h2 class="detail-model">${esc(b.name)}</h2>
       <p class="detail-meta">${esc(b.region||'')}</p>
-      <p class="detail-size">${b.vintage ? 'Millésime '+b.vintage : ''}${b.vintage?' · ':''}${esc(COLORS[b.color]||'')}</p>
+      <p class="detail-size">${b.vintage ? 'Millésime '+b.vintage : ''}${b.vintage?' · ':''}${esc(COLORS[b.color]||'')}${b.size?' · '+esc(b.size):''}</p>
       <div class="detail-divider"></div>
 
       <div class="price-grid">
@@ -533,7 +542,7 @@ $('detailSheet').addEventListener('click', e => {
 });
 
 /* ---------- Formulaire ---------- */
-const FIELDS = {fName:'name',fProducer:'producer',fVintage:'vintage',fColor:'color',fRegion:'region',fImage:'image',fQty:'qty',fPrice:'price',fFrom:'drinkFrom',fTo:'drinkTo',fComRating:'communityRating',fComVotes:'communityVotes',fComSource:'communitySource',fNote:'note'};
+const FIELDS = {fName:'name',fProducer:'producer',fVintage:'vintage',fColor:'color',fRegion:'region',fImage:'image',fQty:'qty',fPrice:'price',fFrom:'drinkFrom',fTo:'drinkTo',fComRating:'communityRating',fComVotes:'communityVotes',fComSource:'communitySource',fNote:'note',fSize:'size'};
 const NUMERIC = ['vintage','qty','price','drinkFrom','drinkTo','communityRating','communityVotes'];
 
 function openForm(id){
@@ -572,7 +581,7 @@ $('wineForm').addEventListener('submit', e => {
 function normalize(item){
   const o = {id:uid(), addedAt:Date.now(), myRating:0};
   o.name = String(item.name||'').trim();
-  ['producer','region','image','note','communitySource','priceSource'].forEach(k=> o[k] = item[k] ? String(item[k]).trim() : '');
+  ['producer','region','image','note','communitySource','priceSource','size'].forEach(k=> o[k] = item[k] ? String(item[k]).trim() : '');
   o.color = COLORS[item.color] ? item.color : 'rouge';
   NUMERIC.forEach(k=> o[k] = num(item[k]));
   if(!o.qty || o.qty < 1) o.qty = 1;
@@ -674,7 +683,7 @@ async function syncFromRepo(){
 }
 function enrich(b, item){
       ['communityRating','communityVotes'].forEach(k=> b[k] = num(item[k]));
-      ['communitySource','image'].forEach(k=> { if(item[k] !== undefined) b[k] = String(item[k]); });
+      ['communitySource','image','size'].forEach(k=> { if(item[k] !== undefined) b[k] = String(item[k]); });
       ['region','note','producer'].forEach(k=>{ if(!b[k] && item[k]) b[k]=String(item[k]); });
       ['drinkFrom','drinkTo','vintage'].forEach(k=>{ if(!b[k] && item[k]) b[k]=num(item[k]); });
       if(item.price !== undefined && (b.priceSource || !b.price)){ b.price = num(item.price); b.priceSource = item.priceSource || ''; }
