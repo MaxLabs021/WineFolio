@@ -657,7 +657,7 @@ async function syncFromRepo(){
   if(!Array.isArray(remote)) return;
   let seen = {};
   try{ const raw = JSON.parse(localStorage.getItem(KEY_IMPORTED) || '{}'); seen = Array.isArray(raw) ? Object.fromEntries(raw.map(id=>[id,1])) : raw; }catch(e){}
-  const key = b => [b.name,b.producer,b.vintage].join('|').toLowerCase();
+  const key = b => [b.name,b.producer,b.vintage,b.size||''].join('|').toLowerCase();
   const existing = new Set([...cellar, ...history].map(key));
   let added = 0, updated = 0;
   remote.forEach(item => {
@@ -667,7 +667,10 @@ async function syncFromRepo(){
       seen[item.id] = v;
       if(existing.has(key(item))){
         const b = [...cellar, ...history].find(x => key(x) === key(item));
-        if(b){ enrich(b, item); updated++; }
+        if(b){
+          if(item.addQty){ b.qty = (Number(b.qty)||0) + (Number(item.qty)||0); added++; }
+          else { enrich(b, item); updated++; }
+        }
         return;
       }
       const b = normalize(item); b.id = item.id; cellar.push(b); existing.add(key(b)); added++;
