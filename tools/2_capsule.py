@@ -3,6 +3,13 @@ from PIL import Image
 src, dst = sys.argv[1], sys.argv[2]
 im = np.array(Image.open(src).convert("RGBA")).astype(np.float32)
 a = im[:,:,3]; H, W = a.shape
+# ne garder que la bouteille principale (les bouteilles voisines en bord de cadre sont retirées)
+_m = (a > 100).astype(np.uint8)
+_n, _lab, _st, _ = cv2.connectedComponentsWithStats(_m)
+if _n > 1:
+    _keep = (_lab == 1 + np.argmax(_st[1:, cv2.CC_STAT_AREA]))
+    im[:,:,3] = im[:,:,3] * cv2.dilate(_keep.astype(np.uint8), np.ones((5,5),np.uint8))
+    a = im[:,:,3]
 row0 = np.where(a[0] > 100)[0]
 if len(row0) == 0:
     Image.fromarray(im.astype(np.uint8)).save(dst); print("bouteille entière"); sys.exit()
