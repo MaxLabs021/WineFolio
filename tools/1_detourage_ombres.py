@@ -7,7 +7,7 @@ alpha = np.array(remove(img, session=new_session("isnet-general-use")))[:,:,3]
 
 # 1. Masque des étiquettes : zones claires et peu saturées dans la bouteille
 hsv = cv2.cvtColor(rgb.astype(np.uint8), cv2.COLOR_RGB2HSV)
-cand = ((hsv[:,:,1] < 60) & (hsv[:,:,2] > 70) & (alpha > 128)).astype(np.uint8)
+cand = ((hsv[:,:,1] < 120) & (hsv[:,:,2] > 110) & (alpha > 128)).astype(np.uint8)
 cand = cv2.morphologyEx(cand, cv2.MORPH_CLOSE, np.ones((25,25),np.uint8))
 n, lab, st, _ = cv2.connectedComponentsWithStats(cand)
 mask = np.zeros_like(cand)
@@ -23,12 +23,11 @@ out = rgb.copy()
 m = mask.astype(np.float32)
 gray = rgb.mean(axis=2)
 sat = hsv[:,:,1].astype(np.float32)
-# estimation initiale grossière
+lab_sat = np.median(sat[mask>0]) if mask.any() else 0
 paper = cv2.dilate(gray, np.ones((27,27),np.uint8))
 bg = cv2.GaussianBlur(paper*m,(0,0),7)/(cv2.GaussianBlur(m,(0,0),7)+1e-4)
-# itérations : on n'utilise que les pixels "papier" (pas le texte) pour estimer l'éclairage
 for it in range(3):
-    pm = ((gray > bg*0.70) & (sat < 45) & (mask>0)).astype(np.float32)
+    pm = ((gray > bg*0.70) & (np.abs(sat-lab_sat) < 28) & (mask>0)).astype(np.float32)
     pm = cv2.erode(pm, np.ones((3,3),np.uint8))
     bgs = []
     for c in range(3):
@@ -37,9 +36,16 @@ for it in range(3):
         w = np.clip(den*3,0,1)
         bgs.append(w*num/den + (1-w)*wide_n/wide_d)
     bg = np.mean(bgs,axis=0)
-for c in range(3):
-    out[:,:,c] = np.where(mask>0, np.clip(rgb[:,:,c]/np.maximum(bgs[c],1)*240,0,255), rgb[:,:,c])
-
+ratio = pm.sum()/max(mask.sum(),1)
+print("part de papier uni sur l'étiquette:", round(float(ratio),2))
+if ratio < 0.5:
+    bgs = None  # étiquette illustrée : on ne touche pas aux couleurs
+# couleur cible = couleur du papier bien éclairé (on garde le crème d'une étiquette crème)
+sel = pm > 0
+for c in (range(3) if bgs is not None else []):
+    target = np.percentile(rgb[:,:,c][sel], 90) if sel.sum() > 500 else 240
+    target = min(target*1.03, 248)
+    out[:,:,c] = np.where(mask>0, np.clip(rgb[:,:,c]/np.maximum(bgs[c],1)*target,0,255), rgb[:,:,c])
 # 3. Fondu doux sur les bords de l'étiquette
 feather = cv2.GaussianBlur(m, (0,0), 3)[:,:,None]
 res = (out*feather + rgb*(1-feather)).astype(np.uint8)
