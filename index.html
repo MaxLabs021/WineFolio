@@ -630,7 +630,32 @@ document.querySelectorAll('[data-close]').forEach(b=> b.addEventListener('click'
   if(id==='detailOverlay') closeDetail(); else { $(id).hidden = true; if($('detailOverlay').hidden) document.body.style.overflow=''; }
 }));
 
+/* ---------- Bouteilles ajoutées par Claude (data/cave.json du repo) ---------- */
+const KEY_IMPORTED = 'winefolio-imported-v1';
+async function syncFromRepo(){
+  let remote;
+  try{
+    const r = await fetch('data/cave.json?t=' + Date.now(), {cache:'no-store'});
+    if(!r.ok) return; remote = await r.json();
+  }catch(e){ return; }
+  if(!Array.isArray(remote)) return;
+  let seen = []; try{ seen = JSON.parse(localStorage.getItem(KEY_IMPORTED) || '[]'); }catch(e){}
+  const key = b => [b.name,b.producer,b.vintage].join('|').toLowerCase();
+  const existing = new Set([...cellar, ...history].map(key));
+  let added = 0;
+  remote.forEach(item => {
+    if(!item || !item.id || !item.name || seen.includes(item.id)) return;
+    seen.push(item.id);
+    if(existing.has(key(item))) return;
+    const b = normalize(item); b.id = item.id; cellar.push(b); existing.add(key(b)); added++;
+  });
+  localStorage.setItem(KEY_IMPORTED, JSON.stringify(seen));
+  if(added){ persist(); render(); toast(added === 1 ? 'Nouvelle bouteille ajoutée par Claude' : added + ' nouvelles bouteilles ajoutées'); }
+}
+document.addEventListener('visibilitychange', () => { if(!document.hidden) syncFromRepo(); });
+
 render();
+syncFromRepo();
 </script>
 </body>
 </html>
