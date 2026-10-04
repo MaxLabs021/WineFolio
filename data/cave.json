@@ -246,15 +246,16 @@
   "color": "rouge",
   "region": "Rhône — Côtes-du-Rhône",
   "qty": 1,
-  "price": 10,
-  "priceSource": "Estimation (~15 $ aux États-Unis) — à doubler si c'est un magnum",
+  "price": 22,
+  "priceSource": "Estimation magnum (≈ 2× le prix de la 75 cl, ~10 €)",
   "communityRating": 7.6,
   "communityVotes": 36376,
   "communitySource": "Vivino · 2022 : 3,8/5 (3,7 tous millésimes)",
   "drinkFrom": 2024,
   "drinkTo": 2027,
-  "note": "Bio. Grenache 53 %, Syrah 37 %, Mourvèdre, Marselan, Carignan.",
-  "v": 1,
-  "image": "images/parallele-45-2022-jaboulet.jpg"
+  "note": "Magnum 1,5 L. Bio. Grenache 53 %, Syrah 37 %, Mourvèdre, Marselan, Carignan. Le magnum vieillit plus lentement qu'une bouteille.",
+  "v": 2,
+  "image": "images/parallele-45-2022-jaboulet.jpg",
+  "size": "Magnum 1,5 L"
  }
 ]
