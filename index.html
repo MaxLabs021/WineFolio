@@ -461,7 +461,7 @@ function renderDetail(){
     : `<p class="reliab ok">Note fiable · ${votes.toLocaleString('fr-FR')} avis</p>`;
   const community = b.communityRating ? `
     <div class="community"><span>Communauté${b.communitySource?' · '+esc(b.communitySource):''}</span>
-    <div><strong>${b.communityRating}/10</strong></div></div>${reliability}` : '';
+    <div><strong>${b.communityRating}/10</strong></div></div>${reliability}` : (b.communitySource ? `<div class="community"><span>${esc(b.communitySource)}</span></div>` : '');
   $('detailSheet').innerHTML = `
     <button class="detail-close" data-act="close" aria-label="Fermer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></button>
     <div class="detail-image">${imgHtml(b)}</div>
@@ -656,22 +656,28 @@ async function syncFromRepo(){
     const v = Number(item.v) || 1;
     if(!(item.id in seen)){
       seen[item.id] = v;
-      if(existing.has(key(item))) return;
+      if(existing.has(key(item))){
+        const b = [...cellar, ...history].find(x => key(x) === key(item));
+        if(b){ enrich(b, item); updated++; }
+        return;
+      }
       const b = normalize(item); b.id = item.id; cellar.push(b); existing.add(key(b)); added++;
     } else if(v > seen[item.id]){
       seen[item.id] = v;
       const b = cellar.find(x=>x.id===item.id) || history.find(x=>x.id===item.id);
       if(!b) return;
+      enrich(b, item); updated++;
+    }
+  });
+  localStorage.setItem(KEY_IMPORTED, JSON.stringify(seen));
+  if(added || updated){ persist(); render(); toast(added ? (added===1 ? 'Nouvelle bouteille ajoutée par Claude' : added+' nouvelles bouteilles ajoutées') : 'Infos mises à jour par Claude'); }
+}
+function enrich(b, item){
       ['communityRating','communityVotes'].forEach(k=> b[k] = num(item[k]));
       ['communitySource','image'].forEach(k=> { if(item[k] !== undefined) b[k] = String(item[k]); });
       ['region','note','producer'].forEach(k=>{ if(!b[k] && item[k]) b[k]=String(item[k]); });
       ['drinkFrom','drinkTo','vintage'].forEach(k=>{ if(!b[k] && item[k]) b[k]=num(item[k]); });
       if(item.price !== undefined && (b.priceSource || !b.price)){ b.price = num(item.price); b.priceSource = item.priceSource || ''; }
-      updated++;
-    }
-  });
-  localStorage.setItem(KEY_IMPORTED, JSON.stringify(seen));
-  if(added || updated){ persist(); render(); toast(added ? (added===1 ? 'Nouvelle bouteille ajoutée par Claude' : added+' nouvelles bouteilles ajoutées') : 'Infos mises à jour par Claude'); }
 }
 document.addEventListener('visibilitychange', () => { if(!document.hidden) syncFromRepo(); });
 
