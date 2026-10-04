@@ -642,6 +642,8 @@ document.getElementById('rack').addEventListener('click', function(e){
   if(delBtn){
     const idx = Number(delBtn.dataset.idx);
     bottles.splice(idx,1);
+    if(editingIdx === idx) editingIdx = null;
+    else if(editingIdx !== null && editingIdx > idx) editingIdx--;
     save();
     render();
     showToast('Bouteille retirée');
@@ -660,7 +662,15 @@ document.getElementById('rack').addEventListener('click', function(e){
   const decBtn = e.target.closest('button[data-action="dec"]');
   if(decBtn){
     const idx = Number(decBtn.dataset.idx);
-    bottles[idx].qty = Math.max(0, Number(bottles[idx].qty||0) - 1);
+    const newQty = Number(bottles[idx].qty||0) - 1;
+    if(newQty <= 0){
+      bottles.splice(idx,1);
+      if(editingIdx === idx) editingIdx = null;
+      else if(editingIdx !== null && editingIdx > idx) editingIdx--;
+      showToast('Dernière bouteille bue — retirée de la cave');
+    } else {
+      bottles[idx].qty = newQty;
+    }
     save();
     render();
     return;
