@@ -155,13 +155,13 @@
   "color": "rouge",
   "region": "Bourgogne — Côte de Beaune",
   "qty": 1,
-  "price": 55,
-  "priceSource": "Estimation (Aloxe-Corton 2019 entre 46 et 54 € ; magnum Javouhey vu à 168 €)",
-  "communitySource": "Pas d'avis Vivino trouvé",
+  "price": 80,
+  "priceSource": "Estimation (magnum du même vin vu à 168 €)",
+  "communitySource": "Pas d'avis Vivino pour cette cuvée (domaine Javouhey : 4,2/5 en moyenne)",
   "drinkFrom": 2024,
   "drinkTo": 2031,
   "note": "Pinot Noir. Sélection de négoce, Beaune.",
-  "v": 1,
+  "v": 2,
   "image": "images/aloxe-corton-2019-javouhey.jpg"
  },
  {
@@ -257,5 +257,25 @@
   "v": 2,
   "image": "images/parallele-45-2022-jaboulet.jpg",
   "size": "Magnum 1,5 L"
+ },
+ {
+  "id": "nuits-st-georges-vv-2017-javouhey-magnum",
+  "v": 1,
+  "name": "Nuits-Saint-Georges Vieilles Vignes",
+  "producer": "Domaine Javouhey",
+  "vintage": 2017,
+  "color": "rouge",
+  "region": "Bourgogne — Côte de Nuits",
+  "qty": 1,
+  "size": "Magnum 1,5 L",
+  "price": 170,
+  "priceSource": "Estimation magnum (boutique de la famille Javouhey : NSG 1er Cru 2017 à 157,50 € HT la 75 cl)",
+  "communityRating": 9.0,
+  "communityVotes": 193,
+  "communitySource": "Vivino · 2017 : 4,5/5 (4,3 tous millésimes)",
+  "drinkFrom": 2024,
+  "drinkTo": 2034,
+  "image": "images/nuits-st-georges-vv-2017-javouhey-magnum.jpg",
+  "note": "Pinot Noir. Mis en magnum à la propriété. Le magnum vieillit plus lentement : pas de précipitation."
  }
 ]
