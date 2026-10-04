@@ -196,7 +196,8 @@ button{font-family:inherit;}
     <select id="sortSelect">
       <option value="recent">Plus récent</option>
       <option value="urgency">À boire en premier</option>
-      <option value="value">Valeur ↓</option>
+      <option value="priceDesc">Prix unitaire ↓ (le plus cher)</option>
+      <option value="priceAsc">Prix unitaire ↑ (le moins cher)</option>
       <option value="rating">Ma note ↓</option>
       <option value="vintage">Millésime ↑</option>
       <option value="name">Nom A→Z</option>
@@ -411,7 +412,8 @@ function render(){
   const sorters = {
     recent: (a,b)=> (b.consumedAt||b.addedAt||0) - (a.consumedAt||a.addedAt||0),
     urgency:(a,b)=> rank[statusOf(a)]-rank[statusOf(b)] || (a.drinkTo||9999)-(b.drinkTo||9999),
-    value:  (a,b)=> (b.price||0)*(b.qty||1) - (a.price||0)*(a.qty||1),
+    priceDesc:(a,b)=> (b.price==null?-1:b.price) - (a.price==null?-1:a.price),
+    priceAsc: (a,b)=> (a.price==null?1e9:a.price) - (b.price==null?1e9:b.price),
     rating: (a,b)=> (b.myRating||0) - (a.myRating||0),
     vintage:(a,b)=> (a.vintage||9999) - (b.vintage||9999),
     name:   (a,b)=> String(a.name).localeCompare(String(b.name),'fr')
