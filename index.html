@@ -380,23 +380,7 @@ const PAIRINGS = {
   liquoreux: "Foie gras, desserts fruités, fromages bleus."
 };
 
-let bottles = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
-if(bottles === null){
-  bottles = [{
-    name: "Chorey-lès-Beaune",
-    producer: "Bonfils-Goichot (Amélie & Arnauld)",
-    vintage: 2022,
-    color: "rouge",
-    region: "Bourgogne — Côte de Beaune",
-    qty: 1,
-    price: 18,
-    drinkFrom: 2025,
-    drinkTo: 2029,
-    note: "Cépage Pinot Noir. Prix estimé (non trouvé pour ce domaine précis) — à corriger si besoin. Exemple ajouté automatiquement pour tester l'app.",
-    addedAt: Date.now()
-  }];
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(bottles));
-}
+let bottles = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
 let activeStatus = 'all';
 let activeColor = 'all';
 let editingIdx = null;
