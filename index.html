@@ -118,6 +118,9 @@ button{font-family:inherit;}
 .big-stars button.on{color:var(--gold);}
 .community{display:flex;justify-content:space-between;align-items:baseline;margin-top:12px;padding-top:12px;border-top:1.5px dashed var(--card-border);}
 .community strong{font-family:'IBM Plex Mono',monospace;font-size:17px;color:var(--wine-dark);}
+.reliab{font-family:'IBM Plex Mono',monospace;font-size:11px;margin:8px 0 0;}
+.reliab.ok{color:var(--sage-dark);}.reliab.mid{color:var(--gold);}.reliab.warn{color:var(--loss);}
+.price-src{font-size:11px;color:var(--ink-soft);margin:4px 0 0;line-height:1.3;}
 .community span{font-size:12.5px;color:var(--ink-soft);}
 .detail-extra{display:flex;flex-direction:column;gap:8px;margin:4px 0 14px;}
 .extra-row{display:flex;justify-content:space-between;gap:12px;font-size:14px;color:var(--ink-soft);}
@@ -356,6 +359,7 @@ function statusOf(b){
   if(b.drinkTo && y === b.drinkTo) return 'fin';
   return 'boire';
 }
+function fmtVotes(n){ n=Number(n)||0; return n>=1000 ? (n/1000).toFixed(1).replace('.0','')+'k avis' : n+' avis'; }
 const STATUS_LABEL = {boire:'À boire', attendre:'À garder', fin:'À boire vite'};
 function windowText(b){ return (b.drinkFrom||b.drinkTo) ? `${b.drinkFrom||'?'} – ${b.drinkTo||'?'}` : 'Non renseignée'; }
 function miniStars(r){ return r ? '★'.repeat(r) : ''; }
@@ -419,7 +423,7 @@ function render(){
     const badge = isH
       ? `<div class="status-badge s-bue">Bue le ${b.consumedAt ? new Date(b.consumedAt).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'2-digit'}) : '—'}</div>`
       : `<div class="status-badge s-${st}">${STATUS_LABEL[st]}</div>`;
-    const left = b.myRating ? `<span class="mini-stars">${miniStars(b.myRating)}</span>` : (b.communityRating ? `<span>${b.communityRating}/10</span>` : `<span>${esc(COLORS[b.color]||'')}</span>`);
+    const left = b.myRating ? `<span class="mini-stars">${miniStars(b.myRating)}</span>` : (b.communityRating ? `<span>${b.communityRating}/10${b.communityVotes?` · ${fmtVotes(b.communityVotes)}`:''}</span>` : `<span>${esc(COLORS[b.color]||'')}</span>`);
     return `
       <article class="ticket" data-id="${b.id}">
         <div class="ticket-image">${imgHtml(b)}${!isH && Number(b.qty)>1 ? `<span class="qty-badge">×${b.qty}</span>`:''}</div>
@@ -450,9 +454,14 @@ function renderDetail(){
   const f = findOpen(); if(!f){ closeDetail(); return; }
   const {b, isH} = f; const st = statusOf(b);
   const stars = [1,2,3,4,5].map(i=>`<button data-act="rate" data-v="${i}" class="${i<=(b.myRating||0)?'on':''}" aria-label="${i} étoiles">★</button>`).join('');
+  const votes = Number(b.communityVotes)||0;
+  const reliability = !votes ? '<p class="reliab warn">Nombre d’avis inconnu</p>'
+    : votes < 30 ? `<p class="reliab warn">⚠︎ Seulement ${votes} avis : note peu représentative</p>`
+    : votes < 100 ? `<p class="reliab mid">Fiabilité moyenne (${votes} avis)</p>`
+    : `<p class="reliab ok">Note fiable · ${votes.toLocaleString('fr-FR')} avis</p>`;
   const community = b.communityRating ? `
     <div class="community"><span>Communauté${b.communitySource?' · '+esc(b.communitySource):''}</span>
-    <div><strong>${b.communityRating}/10</strong>${b.communityVotes?` <span>(${b.communityVotes} votes)</span>`:''}</div></div>` : '';
+    <div><strong>${b.communityRating}/10</strong></div></div>${reliability}` : '';
   $('detailSheet').innerHTML = `
     <button class="detail-close" data-act="close" aria-label="Fermer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></button>
     <div class="detail-image">${imgHtml(b)}</div>
@@ -464,7 +473,7 @@ function renderDetail(){
       <div class="detail-divider"></div>
 
       <div class="price-grid">
-        <div class="price-block"><p class="mono-label">Prix unitaire</p><p class="price-value">${b.price ? eur(b.price) : '—'}</p></div>
+        <div class="price-block"><p class="mono-label">Prix unitaire</p><p class="price-value">${b.price ? eur(b.price) : '—'}</p>${b.priceSource?`<p class="price-src">${esc(b.priceSource)}</p>`:''}</div>
         <div class="price-block"><p class="mono-label">${isH?'Apogée':'Valeur en cave'}</p><p class="price-value accent">${isH ? esc(windowText(b)) : (b.price ? eur(b.price*(b.qty||0)) : '—')}</p></div>
       </div>
 
@@ -550,6 +559,7 @@ $('wineForm').addEventListener('submit', e => {
   if(id){
     const target = cellar.find(x=>x.id===id) || history.find(x=>x.id===id);
     if(history.includes(target)) delete data.qty;
+    if(data.price !== target.price) data.priceSource = '';
     Object.assign(target, data);
     toast('Bouteille mise à jour');
   } else {
@@ -562,7 +572,7 @@ $('wineForm').addEventListener('submit', e => {
 function normalize(item){
   const o = {id:uid(), addedAt:Date.now(), myRating:0};
   o.name = String(item.name||'').trim();
-  ['producer','region','image','note','communitySource'].forEach(k=> o[k] = item[k] ? String(item[k]).trim() : '');
+  ['producer','region','image','note','communitySource','priceSource'].forEach(k=> o[k] = item[k] ? String(item[k]).trim() : '');
   o.color = COLORS[item.color] ? item.color : 'rouge';
   NUMERIC.forEach(k=> o[k] = num(item[k]));
   if(!o.qty || o.qty < 1) o.qty = 1;
@@ -634,23 +644,34 @@ document.querySelectorAll('[data-close]').forEach(b=> b.addEventListener('click'
 const KEY_IMPORTED = 'winefolio-imported-v1';
 async function syncFromRepo(){
   let remote;
-  try{
-    const r = await fetch('data/cave.json?t=' + Date.now(), {cache:'no-store'});
-    if(!r.ok) return; remote = await r.json();
-  }catch(e){ return; }
+  try{ const r = await fetch('data/cave.json?t=' + Date.now(), {cache:'no-store'}); if(!r.ok) return; remote = await r.json(); }catch(e){ return; }
   if(!Array.isArray(remote)) return;
-  let seen = []; try{ seen = JSON.parse(localStorage.getItem(KEY_IMPORTED) || '[]'); }catch(e){}
+  let seen = {};
+  try{ const raw = JSON.parse(localStorage.getItem(KEY_IMPORTED) || '{}'); seen = Array.isArray(raw) ? Object.fromEntries(raw.map(id=>[id,1])) : raw; }catch(e){}
   const key = b => [b.name,b.producer,b.vintage].join('|').toLowerCase();
   const existing = new Set([...cellar, ...history].map(key));
-  let added = 0;
+  let added = 0, updated = 0;
   remote.forEach(item => {
-    if(!item || !item.id || !item.name || seen.includes(item.id)) return;
-    seen.push(item.id);
-    if(existing.has(key(item))) return;
-    const b = normalize(item); b.id = item.id; cellar.push(b); existing.add(key(b)); added++;
+    if(!item || !item.id || !item.name) return;
+    const v = Number(item.v) || 1;
+    if(!(item.id in seen)){
+      seen[item.id] = v;
+      if(existing.has(key(item))) return;
+      const b = normalize(item); b.id = item.id; cellar.push(b); existing.add(key(b)); added++;
+    } else if(v > seen[item.id]){
+      seen[item.id] = v;
+      const b = cellar.find(x=>x.id===item.id) || history.find(x=>x.id===item.id);
+      if(!b) return;
+      ['communityRating','communityVotes'].forEach(k=> b[k] = num(item[k]));
+      ['communitySource','image'].forEach(k=> { if(item[k] !== undefined) b[k] = String(item[k]); });
+      ['region','note','producer'].forEach(k=>{ if(!b[k] && item[k]) b[k]=String(item[k]); });
+      ['drinkFrom','drinkTo','vintage'].forEach(k=>{ if(!b[k] && item[k]) b[k]=num(item[k]); });
+      if(item.price !== undefined && (b.priceSource || !b.price)){ b.price = num(item.price); b.priceSource = item.priceSource || ''; }
+      updated++;
+    }
   });
   localStorage.setItem(KEY_IMPORTED, JSON.stringify(seen));
-  if(added){ persist(); render(); toast(added === 1 ? 'Nouvelle bouteille ajoutée par Claude' : added + ' nouvelles bouteilles ajoutées'); }
+  if(added || updated){ persist(); render(); toast(added ? (added===1 ? 'Nouvelle bouteille ajoutée par Claude' : added+' nouvelles bouteilles ajoutées') : 'Infos mises à jour par Claude'); }
 }
 document.addEventListener('visibilitychange', () => { if(!document.hidden) syncFromRepo(); });
 
