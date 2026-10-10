@@ -38,7 +38,7 @@ for it in range(3):
     bg = np.mean(bgs,axis=0)
 ratio = pm.sum()/max(mask.sum(),1)
 print("part de papier uni sur l'étiquette:", round(float(ratio),2))
-if ratio < 0.5:
+if ratio < 0.67:
     bgs = None  # étiquette illustrée : on ne touche pas aux couleurs
 # couleur cible = couleur du papier bien éclairé (on garde le crème d'une étiquette crème)
 sel = pm > 0
