@@ -428,5 +428,16 @@
   "note": "Aligoté. Vif et frais, à servir entre 8 et 10 °C avec des fruits de mer. Un peu léger pour certains avis.",
   "v": 1,
   "image": "images/aligote-2024-couvent-visitandines.jpg"
+ },
+ {
+  "id": "savigny-cuvee-ambre-2024-gaugey-lot2",
+  "v": 1,
+  "addQty": true,
+  "qty": 1,
+  "name": "Savigny-lès-Beaune Cuvée Ambre",
+  "producer": "Domaine Gaugey",
+  "vintage": 2024,
+  "color": "rouge",
+  "image": "images/savigny-cuvee-ambre-2024-gaugey.jpg"
  }
 ]
