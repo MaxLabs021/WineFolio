@@ -439,5 +439,23 @@
   "vintage": 2024,
   "color": "rouge",
   "image": "images/savigny-cuvee-ambre-2024-gaugey.jpg"
+ },
+ {
+  "id": "parallele-45-75cl-jaboulet",
+  "v": 1,
+  "name": "Parallèle 45 Côtes-du-Rhône",
+  "producer": "Paul Jaboulet Aîné",
+  "color": "rouge",
+  "region": "Rhône — Côtes-du-Rhône",
+  "qty": 1,
+  "price": 10,
+  "priceSource": "Estimation (≈ 15 $ aux États-Unis)",
+  "communityRating": 7.4,
+  "communityVotes": 36376,
+  "communitySource": "Vivino 3,7/5 · tous millésimes",
+  "drinkFrom": 2025,
+  "drinkTo": 2028,
+  "image": "images/parallele-45-75cl-jaboulet.jpg",
+  "note": "Bouteille 75 cl, bio. Millésime non lisible sur la photo : à compléter via Modifier. Même cuvée que ton magnum 2022."
  }
 ]
